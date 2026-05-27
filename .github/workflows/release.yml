@@ -1,0 +1,62 @@
+name: Build forgejo for Debian/Ubuntu
+
+on:
+  workflow_dispatch:
+    inputs:
+      FORGEJO_VERSION:
+        description: The version of forgejo to build.
+        type: string
+        required: true
+      build_version:
+        description: The build version.
+        type: string
+        required: true
+      architecture:
+        description: Architecture to build (amd64, armhf, arm64, or 'all' for all architectures)
+        type: choice
+        default: 'all'
+        options:
+          - 'all'
+          - 'amd64'
+          - 'armhf'
+          - 'arm64'
+
+permissions:
+  contents: write
+
+jobs:
+  build-forgejo:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout forgejo-debian
+        uses: actions/checkout@v4
+
+      - name: Build forgejo
+        run: ./build.sh ${{ inputs.FORGEJO_VERSION }} ${{ inputs.build_version }} ${{ inputs.architecture }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact
+          path: forgejo_*.deb
+
+  release-forgejo:
+    name: (Draft-)Release forgejo for Debian/Ubuntu
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: build-forgejo
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: artifact
+
+      - name: Publish Release Draft
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: forgejo_*.deb
+          name: ${{ inputs.FORGEJO_VERSION }}+${{ inputs.build_version }}
+          tag_name: ${{ inputs.FORGEJO_VERSION }}+${{ inputs.build_version }}
+          fail_on_unmatched_files: true

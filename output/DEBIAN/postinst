@@ -1,0 +1,39 @@
+#!/bin/bash
+set -e
+
+# Create git group if it doesn't exist
+if ! getent group git > /dev/null 2>&1; then
+    addgroup --system git
+fi
+
+# Create git user if it doesn't exist
+if ! id -u git > /dev/null 2>&1; then
+    adduser --system --shell /bin/bash --gecos 'Git Version Control' \
+        --ingroup git --disabled-password --home /home/git git
+fi
+
+# Create data directory
+if [ ! -d /var/lib/forgejo ]; then
+    mkdir -p /var/lib/forgejo
+fi
+chown git:git /var/lib/forgejo
+chmod 750 /var/lib/forgejo
+
+# Create config directory
+if [ ! -d /etc/forgejo ]; then
+    mkdir -p /etc/forgejo
+fi
+chown root:git /etc/forgejo
+chmod 770 /etc/forgejo
+
+# Reload systemd so the new service file is recognized
+if command -v systemctl > /dev/null 2>&1 && systemctl is-system-running --quiet 2>/dev/null; then
+    systemctl daemon-reload || true
+fi
+
+echo "Forgejo installed. To complete setup:"
+echo "  1. Start the service: sudo systemctl start forgejo"
+echo "  2. Open http://localhost:3000 in your browser to configure Forgejo"
+echo "  3. After initial configuration, enable on boot: sudo systemctl enable forgejo"
+
+exit 0

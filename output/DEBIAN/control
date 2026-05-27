@@ -1,0 +1,13 @@
+Source: forgejo
+Section: net
+Priority: optional
+Maintainer: Dario Griffo <dariogriffo@gmail.com>
+Homepage: https://forgejo.org
+Package: forgejo
+Version: FORGEJO_VERSION-BUILD_VERSION+DIST
+Architecture: SUPPORTED_ARCHITECTURES
+Depends: git, git-lfs, adduser
+Description: a self-hosted lightweight software forge
+ Forgejo is a self-hosted lightweight software forge.
+ Easy to install and low maintenance, it just does the job.
+ Forgejo is a fork of Gitea focused on security and community governance.

@@ -1,0 +1,11 @@
+#!/bin/bash
+set -e
+
+# Stop and disable service before removal
+if command -v systemctl > /dev/null 2>&1 && systemctl is-system-running --quiet 2>/dev/null; then
+    systemctl stop forgejo.service || true
+    systemctl disable forgejo.service || true
+    systemctl daemon-reload || true
+fi
+
+exit 0

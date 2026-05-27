@@ -1,0 +1,10 @@
+# Downloaded binaries
+amd64/
+armhf/
+arm64/
+
+# Built packages
+*.deb
+
+.idea/*
+.DS_Store
