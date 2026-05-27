@@ -11,10 +11,14 @@ ARG FORGEJO_RELEASE
 RUN mkdir -p /output/usr/bin
 RUN mkdir -p /output/usr/lib/systemd/system
 RUN mkdir -p /output/usr/share/doc/forgejo
+RUN mkdir -p /output/usr/share/bash-completion/completions
+RUN mkdir -p /output/usr/share/zsh/vendor-completions
 RUN mkdir -p /output/DEBIAN
 
 COPY ${FORGEJO_RELEASE}/forgejo /output/usr/bin/forgejo
 COPY output/forgejo.service /output/usr/lib/systemd/system/forgejo.service
+COPY output/forgejo_bash_completion /output/usr/share/bash-completion/completions/forgejo
+COPY output/_forgejo /output/usr/share/zsh/vendor-completions/_forgejo
 COPY output/DEBIAN/control /output/DEBIAN/control
 COPY output/DEBIAN/postinst /output/DEBIAN/postinst
 COPY output/DEBIAN/prerm /output/DEBIAN/prerm
