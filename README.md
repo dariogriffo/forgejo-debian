@@ -27,6 +27,8 @@ Currently supported Debian distros are:
 Currently supported Ubuntu distros are:
 - Jammy
 - Noble
+- Questing
+- Resolute
 
 Supported architectures: **amd64**, **armhf**, **arm64**
 
