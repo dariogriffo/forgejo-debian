@@ -1,0 +1,16 @@
+Source: forgejo
+Section: utils
+Priority: optional
+Maintainer: Dario Griffo <dariogriffo@gmail.com>
+Build-Depends: debhelper-compat (= 13), wget, ca-certificates
+Standards-Version: 4.6.2
+Homepage: https://codeberg.org/forgejo/forgejo
+Rules-Requires-Root: no
+
+Package: forgejo
+Architecture: amd64 arm64 armhf
+Depends: ${misc:Depends}
+Description: A self-hosted lightweight software forge
+ Forgejo is a self-hosted lightweight software forge. Easy to install and low
+ maintenance, it just does the job. Brought to you by an inclusive community
+ under the umbrella of Codeberg e.V.

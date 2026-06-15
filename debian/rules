@@ -1,0 +1,32 @@
+#!/usr/bin/make -f
+DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+PKG_VERSION := $(shell dpkg-parsechangelog -S Version | sed 's/[-~].*//')
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	@arch="$(DEB_HOST_ARCH)"; \
+	case "$$arch" in \
+		amd64) FORGEJO_RELEASE="forgejo-$(PKG_VERSION)-linux-amd64" ;; \
+		arm64) FORGEJO_RELEASE="forgejo-$(PKG_VERSION)-linux-arm64" ;; \
+		armhf) FORGEJO_RELEASE="forgejo-$(PKG_VERSION)-linux-arm-6" ;; \
+		*) echo "Unsupported architecture: $$arch"; exit 1 ;; \
+	esac; \
+	echo "Downloading $$FORGEJO_RELEASE..."; \
+	wget -q "https://codeberg.org/forgejo/forgejo/releases/download/v$(PKG_VERSION)/$$FORGEJO_RELEASE" -O forgejo; \
+	chmod +x forgejo
+
+override_dh_auto_install:
+	install -D -m 755 forgejo debian/forgejo/usr/bin/forgejo
+
+override_dh_auto_test:
+
+override_dh_auto_clean:
+	rm -f forgejo
+
+override_dh_strip:
+
+override_dh_shlibdeps:
