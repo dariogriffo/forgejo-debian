@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Dario Griffo <dariogriffo@gmail.com>
 Homepage: https://forgejo.org
 Package: forgejo
-Version: FORGEJO_VERSION-BUILD_VERSION+DIST
+Version: FORGEJO_VERSION-BUILD_VERSION~DIST
 Architecture: SUPPORTED_ARCHITECTURES
 Depends: git, git-lfs, adduser
 Description: a self-hosted lightweight software forge
