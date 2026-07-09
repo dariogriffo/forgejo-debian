@@ -64,7 +64,7 @@ jobs:
             forgejo_*.debian.tar.xz
 
   release-forgejo:
-    name: (Draft-)Release forgejo for Debian/Ubuntu
+    name: Release forgejo for Debian/Ubuntu
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [build-forgejo, build-src]
@@ -79,10 +79,10 @@ jobs:
         with:
           name: source-artifact
 
-      - name: Publish Release Draft
+      - name: Publish Release
         uses: softprops/action-gh-release@v2
         with:
-          draft: true
+          draft: false
           files: |
             forgejo_*.deb
             forgejo_*.dsc
