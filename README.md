@@ -38,6 +38,8 @@ install on Debian/Ubuntu. If you're looking for the Forgejo source code, see
 
 ## Install/Update
 
+📖 **Step-by-step install guide:** [Debian](https://debian.griffo.io/install-latest-forgejo-in-debian.html) · [Ubuntu](https://debian.griffo.io/install-latest-forgejo-in-ubuntu.html)
+
 ### The Debian way
 
 ```sh
