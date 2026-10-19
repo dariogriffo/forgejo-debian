@@ -14,34 +14,48 @@ PACKAGE_NAME="forgejo"
 ORIG_TARBALL="${PACKAGE_NAME}_${FORGEJO_VERSION}.orig.tar.gz"
 BUILD_DIR="${PACKAGE_NAME}-${FORGEJO_VERSION}"
 
-echo "Creating Debian/Ubuntu source packages for forgejo ${FORGEJO_VERSION}-${BUILD_VERSION}..."
+echo "Creating the source package for forgejo ${FORGEJO_VERSION}-${BUILD_VERSION}..."
+
+# A rebuild of an upstream version already released here (a +N build bump)
+# must ship the very same orig tarball: the pool holds one per upstream
+# version and reprepro refuses a different one, and nothing guarantees the
+# archive download is byte-identical next time. Reuse the earlier release's copy.
+if [ ! -f "$ORIG_TARBALL" ]; then
+    for ((b = BUILD_VERSION - 1; b >= 1; b--)); do
+        if wget -q "https://github.com/dariogriffo/forgejo-debian/releases/download/${FORGEJO_VERSION}%2B${b}/${ORIG_TARBALL}" -O "$ORIG_TARBALL"; then
+            echo "  Reusing $ORIG_TARBALL from release ${FORGEJO_VERSION}+${b}"
+            break
+        fi
+        rm -f "$ORIG_TARBALL"
+    done
+fi
 
 # Download upstream source tarball (shared .orig.tar.gz across all distributions)
 if [ ! -f "$ORIG_TARBALL" ]; then
-    echo "Downloading upstream source from GitHub..."
-    wget -q "https://github.com/forgejo/forgejo/archive/refs/tags/v${FORGEJO_VERSION}.tar.gz" -O "$ORIG_TARBALL"
+    echo "Downloading upstream source from Codeberg..."
+    wget -q "https://codeberg.org/forgejo/forgejo/archive/v${FORGEJO_VERSION}.tar.gz" -O "$ORIG_TARBALL"
     echo "  Downloaded $ORIG_TARBALL"
 else
     echo "  Using existing $ORIG_TARBALL"
 fi
 
 build_source_package() {
-    local dist=$1
-    local FULL_VERSION="${FORGEJO_VERSION}-${BUILD_VERSION}~${dist}"
+    local FULL_VERSION="${FORGEJO_VERSION}-${BUILD_VERSION}~griffo"
 
-    echo "  Building source package for ${dist} (${FULL_VERSION})..."
+    echo "  Building source package ${FULL_VERSION}..."
 
     # Clean and recreate build directory from orig tarball
     rm -rf "$BUILD_DIR"
-    tar -xf "$ORIG_TARBALL"
-    # GitHub archives extract as forgejo-x.y.z/ which matches our BUILD_DIR
+    mkdir -p "$BUILD_DIR"
+    # Codeberg archives extract as forgejo/, so strip it into BUILD_DIR
+    tar -xf "$ORIG_TARBALL" -C "$BUILD_DIR" --strip-components=1
 
     # Copy Debian packaging directory
     cp -r debian "$BUILD_DIR/"
 
-    # Generate distribution-specific changelog (overwrites placeholder)
+    # Generate the changelog (overwrites placeholder)
     cat > "$BUILD_DIR/debian/changelog" << EOF
-forgejo (${FULL_VERSION}) ${dist}; urgency=medium
+forgejo (${FULL_VERSION}) stable; urgency=medium
 
   * New upstream release ${FORGEJO_VERSION}.
 
@@ -56,18 +70,8 @@ EOF
 }
 
 echo ""
-echo "Building Debian source packages..."
-DEBIAN_DISTS=("bookworm" "trixie" "forky" "sid")
-for dist in "${DEBIAN_DISTS[@]}"; do
-    build_source_package "$dist"
-done
-
-echo ""
-echo "Building Ubuntu source packages..."
-UBUNTU_DISTS=("jammy" "noble" "questing" "resolute")
-for dist in "${UBUNTU_DISTS[@]}"; do
-    build_source_package "$dist"
-done
+# One source package for every suite, as with the binaries (see build_debian.sh).
+build_source_package
 
 echo ""
 echo "Source packages created successfully!"

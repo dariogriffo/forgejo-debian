@@ -1,7 +1,5 @@
-ARG DEBIAN_DIST=bookworm
 FROM debian:trixie
 
-ARG DEBIAN_DIST
 ARG FORGEJO_VERSION
 ARG BUILD_VERSION
 ARG FULL_VERSION
@@ -26,10 +24,8 @@ COPY output/copyright /output/usr/share/doc/forgejo/copyright
 COPY output/changelog.Debian /output/usr/share/doc/forgejo/changelog.Debian
 COPY output/README.md /output/usr/share/doc/forgejo/README.md
 
-RUN sed -i "s/DIST/$DEBIAN_DIST/" /output/usr/share/doc/forgejo/changelog.Debian
 RUN sed -i "s/FULL_VERSION/$FULL_VERSION/" /output/usr/share/doc/forgejo/changelog.Debian
 RUN sed -i "s/FORGEJO_VERSION/$FORGEJO_VERSION/g" /output/usr/share/doc/forgejo/changelog.Debian
-RUN sed -i "s/DIST/$DEBIAN_DIST/" /output/DEBIAN/control
 RUN sed -i "s/FORGEJO_VERSION/$FORGEJO_VERSION/" /output/DEBIAN/control
 RUN sed -i "s/BUILD_VERSION/$BUILD_VERSION/" /output/DEBIAN/control
 RUN sed -i "s/SUPPORTED_ARCHITECTURES/$ARCH/" /output/DEBIAN/control
@@ -38,4 +34,4 @@ RUN chmod 755 /output/usr/bin/forgejo
 RUN chmod 755 /output/DEBIAN/postinst
 RUN chmod 755 /output/DEBIAN/prerm
 
-RUN dpkg-deb --build /output /forgejo_${FULL_VERSION}.deb
+RUN dpkg-deb -Zxz --build /output /forgejo_${FULL_VERSION}.deb

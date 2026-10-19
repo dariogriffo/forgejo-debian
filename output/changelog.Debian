@@ -1,4 +1,4 @@
-forgejo (FULL_VERSION) DIST; urgency=low
+forgejo (FULL_VERSION) stable; urgency=low
 
   * Package forgejo FORGEJO_VERSION for Debian/Ubuntu.
 
