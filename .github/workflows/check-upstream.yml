@@ -1,0 +1,69 @@
+name: Check for new forgejo release
+
+on:
+  schedule:
+    # Hourly, offset to avoid the top-of-hour rush.
+    - cron: "41 * * * *"
+  workflow_dispatch: {}
+
+# Only one checker at a time.
+concurrency:
+  group: check-upstream
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: write   # required to dispatch release.yml
+
+env:
+  # We follow the Forgejo LTS line only: patch releases of this major.
+  # Bump it deliberately when moving to the next LTS.
+  TRACK_MAJOR: "15"
+
+jobs:
+  check:
+    name: Compare upstream vs published
+    runs-on: ubuntu-latest
+    steps:
+      - name: Detect and dispatch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          # Newest stable v<TRACK_MAJOR>.x.y tag on Codeberg (drafts and prereleases excluded).
+          UPSTREAM=$(curl -fsSL "https://codeberg.org/api/v1/repos/forgejo/forgejo/releases?draft=false&pre-release=false&limit=50" \
+            | jq -r --arg m "v${TRACK_MAJOR}." '[.[].tag_name | select(startswith($m))] | .[]' \
+            | sed 's/^v//' | sort -V | tail -1)
+          if [ -z "$UPSTREAM" ]; then
+            echo "No v${TRACK_MAJOR}.x release found upstream." >&2
+            exit 1
+          fi
+          echo "Upstream forgejo ${TRACK_MAJOR}.x: $UPSTREAM"
+
+          # Our latest published release tag is "<forgejo>+<build>" (e.g. 15.0.2+2).
+          # 404 (no releases yet) -> empty -> treat as "needs building".
+          OURS=$(gh api repos/${{ github.repository }}/releases/latest -q .tag_name 2>/dev/null || echo "")
+          OURS_FJ="${OURS%%+*}"
+          echo "Ours: ${OURS:-<none>} (forgejo part: ${OURS_FJ:-<none>})"
+
+          if [ "$UPSTREAM" = "$OURS_FJ" ]; then
+            echo "Up to date, nothing to do."
+            exit 0
+          fi
+
+          # Don't dispatch a duplicate if a build is already running/queued.
+          ACTIVE=$(gh run list --workflow=release.yml \
+            --json status \
+            -q '[.[] | select(.status == "in_progress" or .status == "queued")] | length')
+          if [ "$ACTIVE" -gt 0 ]; then
+            echo "A release.yml run is already active ($ACTIVE); skipping this tick."
+            exit 0
+          fi
+
+          echo "New forgejo release detected: $OURS_FJ -> $UPSTREAM. Dispatching build."
+          gh workflow run release.yml \
+            -f FORGEJO_VERSION="$UPSTREAM" \
+            -f build_version=1 \
+            -f architecture=all
